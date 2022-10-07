@@ -1,6 +1,7 @@
 import torch
 from torch import nn,optim,tensor
 from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
 from torchvision.utils import  make_grid
 from torchvision import datasets,transforms
 import numpy as np
@@ -8,46 +9,72 @@ from matplotlib import pyplot as plt
 import time
 from net import Vgg16_net
 # 全局变量
-batch_size=32   # 每次喂入的数据量
+batch_size=32    # 每次喂入的数据量
 
 # num_print=int(50000//batch_size//4)
 
 num_print = 100
 
-epoch_num = 30 # 总迭代次数
+epoch_num = 30   # 总迭代次数
 
 lr = 0.01
 step_size = 10  # 每n次epoch更新一次学习率
 
-# 数据获取(数据增强,归一化)
-def transforms_RandomHorizontalFlip():
-
-    # transforms.Compose(),将一系列的transforms有序组合,实现按照这些方法依次对图像操作
-
-    # ToTensor()使图片数据转换为tensor张量,这个过程包含了归一化,图像数据从0~255压缩到0~1,这个函数必须在Normalize之前使用
-    # 实现原理,即针对不同类型进行处理,原理即各值除以255,最后通过torch.from_numpy将PIL Image或者 numpy.ndarray()针对具体类型转成torch.tensor()数据类型
-
-    # Normalize()是归一化过程,ToTensor()的作用是将图像数据转换为(0,1)之间的张量,Normalize()则使用公式(x-mean)/std
-    # 将每个元素分布到(-1,1). 归一化后数据转为标准格式,
-    transform_train=transforms.Compose([transforms.RandomHorizontalFlip(),
-                                         transforms.ToTensor(),
-                                         transforms.Normalize((0.485,0.456,0.406),(0.229,0.224,0.225))])
-
-    transform=transforms.Compose([transforms.ToTensor(),
-                                  transforms.Normalize((0.485,0.456,0.406),(0.226,0.224,0.225))])
-
-
-    # root:cifar-10 的根目录,data_path
-    # train:True=训练集, False=测试集
-    # transform:(可调用,可选)-接收PIL图像并返回转换版本的函数
-    # download:true=从互联网上下载数据,并将其放在root目录下,如果数据集已经下载,就什么都不干
-    train_dataset=datasets.CIFAR10(root='../data_hub/cifar10/data_1',train=True,transform=transform_train,download=True)
-    test_dataset=datasets.CIFAR10(root='../data_hub/cifar10/data_1',train=False,transform=transform,download=True)
-
-    return train_dataset,test_dataset
+# # 数据获取(数据增强,归一化)
+# def transforms_RandomHorizontalFlip():
+#
+#     # transforms.Compose(),将一系列的transforms有序组合,实现按照这些方法依次对图像操作
+#
+#     # ToTensor()使图片数据转换为tensor张量,这个过程包含了归一化,图像数据从0~255压缩到0~1,这个函数必须在Normalize之前使用
+#
+#     # 实现原理,即针对不同类型进行处理,原理即各值除以255,最后通过torch.from_numpy将PIL Image或者 numpy.ndarray()针对具体类型转成torch.tensor()数据类型
+#
+#     # Normalize()是归一化过程,ToTensor()的作用是将图像数据转换为(0,1)之间的张量,Normalize()则使用公式(x-mean)/std
+#     # 将每个元素分布到(-1,1). 归一化后数据转为标准格式,
+#     transform_train=transforms.Compose([transforms.RandomHorizontalFlip(),
+#                                          transforms.ToTensor(),
+#                                          transforms.Normalize((0.485,0.456,0.406),(0.229,0.224,0.225))])
+#
+#     transform=transforms.Compose([transforms.ToTensor(),
+#                                   transforms.Normalize((0.485,0.456,0.406),(0.226,0.224,0.225))])
+#
+#
+#     # root:cifar-10 的根目录,data_path
+#     # train:True=训练集, False=测试集
+#     # transform:(可调用,可选)-接收PIL图像并返回转换版本的函数
+#     # download:true=从互联网上下载数据,并将其放在root目录下,如果数据集已经下载,就什么都不干
+#     train_dataset=datasets.CIFAR10(root='../data_hub/cifar10/data_1',train=True,transform=transform_train,download=True)
+#     test_dataset=datasets.CIFAR10(root='../data_hub/cifar10/data_1',train=False,transform=transform,download=True)
+#
+#     return train_dataset,test_dataset
 
 # 数据增强:随机翻转
-train_dataset,test_dataset=transforms_RandomHorizontalFlip()
+# train_dataset,test_dataset=transforms_RandomHorizontalFlip
+
+ROOT_TRAIN = "E:/pytorch_net/AlexNet/data/train"
+ROOT_TEST = 'E:/pytorch_net/AlexNet/data/val'
+
+# 将图像的像素值归一化为-1 1之间
+normalize = transforms.Normalize([0.5,0.5,0.5],[0.5,0.5,0.5])
+
+# 改变图像的工具箱
+train_transform = transforms.Compose([
+    transforms.Resize((32,32)),
+    transforms.RandomVerticalFlip(),
+    transforms.ToTensor(),  # 转化为Tensor类型
+    normalize
+])
+
+var_transform = transforms.Compose([
+    transforms.Resize((32,32)),   # 根据数据集的大小改变
+    transforms.ToTensor(),
+    normalize
+])
+
+train_dataset = ImageFolder(ROOT_TRAIN,transform=train_transform)
+
+test_dataset = ImageFolder(ROOT_TEST,transform = var_transform)
+
 '''
 #Dataloader(....)
 dataset:就是pytorch已有的数据读取接口,或者自定义的数据接口的输出,该输出要么是torch.utils.data.Dataset类的对象,要么是继承自torch.utils.data.Dataset类的自定义类的对象
@@ -140,9 +167,9 @@ for epoch in range(epoch_num):
 
     lr_1=optimizer.param_groups[0]['lr']
     print("learn_rate:%.15f"%lr_1)
-    schedule.step()
+    schedule.step() #
 
-end=time.time()
+end = time.time()
 print("time:{}".format(end-start))
 
 
@@ -168,5 +195,5 @@ with torch.no_grad():   # 训练集不需要反向传播
         # torch.eq().sum()就是将所有值相加，但是得到的仍然是一个tensor,本例中torch.eq(A,B).sum()得到的结果就是[1](1+0+0+0),
         # 最后一步torch.eq(A,B).sum().item()得到的就是这个tensor中的值了，即1
 
-print("Accuracy of the network on the 10000 test images:%.2f %%" % (100*correct/total) )
+print("Accuracy of the network on the 10000 test images:%.2f %%" % (100*correct/total))
 print("===============================================")

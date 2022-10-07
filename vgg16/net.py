@@ -8,7 +8,14 @@ class Vgg16_net(nn.Module):
         # 需要各个层上都加上padding=1，这样经过每层的3 * 3卷积，图片尺寸都不会改变，只有经过池化层尺寸减半。
         # 由于网络有5个池化层，所以feature map减为32/2^5=1，而通道数为512，所以全连接层的尺寸由1 * 1 * 512开始，最后一层为10（十分类）在经过softmax
         self.layer1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1),  # (32-3+2)/1+1=32   32*32*64
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1),
+            # (32-3+2)/1+1=32   32*32*64
+            # 输入图片大小 W×W
+            # 卷积核大小 F×F
+            # 步长 S
+            # padding的像素数 P
+            # 于是我们可以得出计算公式为：
+            # N = (W − F + 2P )/S+1
             nn.BatchNorm2d(64),
             # inplace-选择是否进行覆盖运算
             # 意思是是否将计算得到的值覆盖之前的值，比如
@@ -16,15 +23,14 @@ class Vgg16_net(nn.Module):
             # 意思就是对从上层网络Conv2d中传递下来的tensor直接进行修改，
             # 这样能够节省运算内存，不用多存储其他变量
 
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1),  # (32-3+2)/1+1=32    32*32*64
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1),  #  (32-3+2)/1+1=32    32*32*64
             # Batch Normalization强行将数据拉回到均值为0，方差为1的正太分布上，
             # 一方面使得数据分布一致，另一方面避免梯度消失。
             nn.BatchNorm2d(64),  # nn.BatchNorm2d——批量标准化操作  ，这使得数据在进行Relu之前不会因为数据过大而导致网络性能的不稳定，BatchNorm2d()
             nn.ReLU(inplace=True),
 
-            nn.MaxPool2d(kernel_size=2,stride=2)   # (32-2)/2+1=16         16*16*64
+            nn.MaxPool2d(kernel_size=2,stride=2)    # (32-2)/2+1=16         16*16*64
         )
-
 
         self.layer2 = nn.Sequential(
             nn.Conv2d(in_channels=64,out_channels=128,kernel_size=3,stride=1,padding=1),  # (16-3+2)/1+1=16  16*16*128
@@ -94,7 +100,6 @@ class Vgg16_net(nn.Module):
             self.layer4,
             self.layer5
         )
-
         self.fc = nn.Sequential(
             # y=xA^T+b  x是输入,A是权值,b是偏执,y是输出
             # nn.Liner(in_features,out_features,bias)
@@ -113,7 +118,7 @@ class Vgg16_net(nn.Module):
             nn.Dropout(0.5),
             # 参数以一定概率进行丢弃，以防止过拟合
             # torch.nn.Dropout()的两种用法：防止过拟合 & 数据增强
-            nn.Linear(256,10)
+            nn.Linear(256,2)
         )
 
     def forward(self,x):
