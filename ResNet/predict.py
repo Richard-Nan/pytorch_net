@@ -19,7 +19,7 @@ def main():
          transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
     # load image
-    img_path = "./tulip.jpg"
+    img_path = "./rose.jpg"
     assert os.path.exists(img_path), "file: '{}' dose not exist.".format(img_path)
     img = Image.open(img_path)
     plt.imshow(img)
@@ -35,6 +35,8 @@ def main():
     with open(json_path, "r") as f:
         class_indict = json.load(f)
 
+    print(class_indict)
+
     # create model
     model = resnext50_32x4d(num_classes=5).to(device)
 
@@ -47,9 +49,16 @@ def main():
     model.eval()
     with torch.no_grad():
         # predict class
+        print(model(img.to(device)))
         output = torch.squeeze(model(img.to(device))).cpu()
+        print(output)
+
         predict = torch.softmax(output, dim=0)
-        predict_cla = torch.argmax(predict).numpy()
+        print("predict values:",predict)
+
+        predict_cla = torch.argmax(predict).numpy()    # 返回指定维度最大值的下标
+
+        print(predict_cla)
 
     print_res = "class: {}   prob: {:.3}".format(class_indict[str(predict_cla)],
                                                  predict[predict_cla].numpy())
