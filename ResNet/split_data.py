@@ -1,13 +1,14 @@
 import os
-from shutil import copy, rmtree
+from shutil import copy, rmtree   # shutil    作为os模块的补充，提供了复制、移动、删除、压缩、解压等操作，这些 os 模块中一般是没有提供的。
 import random
-
 
 def mk_file(file_path: str):
     if os.path.exists(file_path):
         # 如果文件夹存在，则先删除原文件夹在重新创建
         rmtree(file_path)
     os.makedirs(file_path)
+
+
 
 
 def main():
@@ -24,9 +25,10 @@ def main():
     assert os.path.exists(origin_flower_path), "path '{}' does not exist.".format(origin_flower_path)
 
     flower_class = [cla for cla in os.listdir(origin_flower_path)
-                    if os.path.isdir(os.path.join(origin_flower_path, cla))]
+                    if os.path.isdir(os.path.join(origin_flower_path, cla))]  # 返回文件夹下所有的文件夹名称
 
-    # 建立保存训练集的文件夹
+
+    #  建立保存训练集的文件夹
     train_root = os.path.join(data_root, "train")
     mk_file(train_root)
     for cla in flower_class:
@@ -61,6 +63,8 @@ def main():
         print()
 
     print("processing done!")
+
+
 
 
 if __name__ == '__main__':
